@@ -1,5 +1,13 @@
-import { createApp } from "vue";
-import App from "./App.vue";
-import router from "./router";
+import { createApp } from 'vue'
+import App from './App.vue'
+import router from './router'
 
-createApp(App).use(router).mount("#app");
+import { gamepadHandler } from './util/gamepad'
+
+gamepadHandler.init(window)
+gamepadHandler.handleGamepadEvents()
+gamepadHandler.listenButtonEvent((event) => {
+  console.log('event!', event)
+})
+
+createApp(App).use(router).mount('#app')
