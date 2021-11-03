@@ -1,7 +1,8 @@
-import { cloneDeep } from 'lodash'
+import { cloneDeep, round } from 'lodash'
 import { logError } from './error'
 
 export interface ButtonPressEvent {
+  type: 'button' | 'axis'
   buttonId: number
   value: number
 }
@@ -17,6 +18,7 @@ interface ButtonState {
 export class GamepadHandler {
   private listeners: ButtonPressListener[] = []
   private lastState?: ButtonState[]
+  private lastAxesState?: number[]
 
   init(window: Window): void {
     window.addEventListener('gamepadconnected', function (e) {
@@ -71,12 +73,26 @@ export class GamepadHandler {
             : { pressed: false, touched: false, value: 0 }
           if (buttonPressed(button, lastButton)) {
             triggerButtonEvent({
+              type: 'button',
               buttonId: index,
               value: button.value,
             })
           }
         }
+        for (const [index, axis] of gamepad.axes.entries()) {
+          const lastValue = this.lastAxesState ? this.lastAxesState[index] : 0
+          const axisDirection = (axisValue: number) =>
+            Math.sign(round(axisValue, 0))
+          if (axisDirection(lastValue) !== axisDirection(axis)) {
+            triggerButtonEvent({
+              type: 'axis',
+              buttonId: index,
+              value: axis,
+            })
+          }
+        }
         this.lastState = cloneDeep(gamepad.buttons) as ButtonState[]
+        this.lastAxesState = cloneDeep(gamepad.axes) as number[]
       }
       requestAnimationFrame(gamepadLoop)
     }
@@ -85,6 +101,7 @@ export class GamepadHandler {
   }
 
   vibrateGamepad(gamepad: Gamepad): void {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     return (gamepad as any).vibrationActuator.playEffect('dual-rumble', {
       startDelay: 0,
       duration: 500,
