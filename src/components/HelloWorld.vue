@@ -2,7 +2,7 @@
   <div class="flex-container-row">
     <div class="sidebar">
       <div class="flex-container-column">
-        <div class="flex-item">Spiele</div>
+        <div class="flex-item" :ref="addItemRef" tabindex="0">Spiele</div>
       </div>
     </div>
     <div class="games-panel">
@@ -12,6 +12,8 @@
           :key="game"
           class="game-tile"
           @click="startGame"
+          :ref="addItemRef"
+          tabindex="0"
         >
           <img src="@/assets/GM8E01.png" />
         </div>
@@ -21,7 +23,8 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, onBeforeUpdate, onMounted, ref } from 'vue'
+import { gamepadHandler } from '@/util/gamepad'
 import { exec } from 'child_process'
 import * as path from 'path'
 
@@ -42,11 +45,11 @@ export default defineComponent({
       const iso = toWindowsPath('E', 'data/games/gc/mprime.gcm')
       const saveState = toWindowsPath(
         'C',
-        'Users/cib/Documents/Dolphin Emulator/StateSaves/GM8E01.s01'
+        'Users/cib12/Documents/Dolphin Emulator/StateSaves/GM8E01.s01'
       )
       const dolphin = toWindowsPath(
         'C',
-        'Users/cib/Downloads/Dolphin-x64/Dolphin.exe'
+        'Users/cib12/games/Dolphin-x64/Dolphin.exe'
       )
       const result = exec(
         `${dolphin} -e ${iso} -s ${saveState} --config "Dolphin.Display.Fullscreen=True" -b`
@@ -54,9 +57,34 @@ export default defineComponent({
       console.log('result', result)
       result.addListener('error', (error) => console.log('error', error))
       result.addListener('close', () => console.log('child process closed'))
+
+      selectedIndex = (selectedIndex + 1) % 10
+      allRefs[selectedIndex].focus()
     }
 
-    return { games, startGame }
+    onMounted(() => {
+      console.log('tiles', allRefs)
+      console.log('tiles', allRefs[0])
+      allRefs[0].focus()
+    })
+
+    onBeforeUpdate(() => {
+      allRefs = []
+    })
+
+    let allRefs = [] as HTMLElement[]
+    let selectedIndex = 0
+    const addItemRef = (el: HTMLElement) => {
+      console.log('pushing ref', el)
+      allRefs = allRefs.concat([el])
+    }
+
+    gamepadHandler.listenButtonEvent(() => {
+      selectedIndex = (selectedIndex + 1) % 10
+      allRefs[selectedIndex].focus()
+    })
+
+    return { games, addItemRef, startGame }
   },
 })
 </script>
@@ -108,5 +136,13 @@ export default defineComponent({
 }
 .flex-item {
   width: 100%;
+}
+
+:focus {
+  background-color: rgba(255, 94, 0, 0.5);
+}
+
+:focus > img {
+  opacity: 0.5;
 }
 </style>
