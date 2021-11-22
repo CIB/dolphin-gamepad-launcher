@@ -1,4 +1,5 @@
 import { createApp } from 'vue'
+import { fontawesomePlugin } from './plugins/fontawesome'
 import App from './App.vue'
 import router from './router'
 
@@ -10,4 +11,4 @@ gamepadHandler.listenButtonEvent((event) => {
   console.log('event!', event)
 })
 
-createApp(App).use(router).mount('#app')
+const app = createApp(App).use(fontawesomePlugin).use(router).mount('#app')

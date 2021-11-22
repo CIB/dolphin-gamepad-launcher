@@ -4,6 +4,7 @@
     <router-link to="/about">About</router-link>
   </div>
   <router-view />
+  <font-awesome-icon icon="phone" />
 </template>
 
 <style lang="scss">
