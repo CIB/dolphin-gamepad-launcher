@@ -23,8 +23,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUpdate, onMounted, ref } from 'vue'
-import { gamepadHandler } from '@/util/gamepad'
+import { defineComponent, onBeforeUpdate, onMounted, Ref, ref } from 'vue'
+import { sortBy } from 'lodash'
+import { controls, ControlsEvent } from '@/util/controls'
 import { exec } from 'child_process'
 import * as path from 'path'
 
@@ -73,15 +74,67 @@ export default defineComponent({
     })
 
     let allRefs = [] as HTMLElement[]
+    const selected: Ref<HTMLElement | null> = ref(null)
     let selectedIndex = 0
     const addItemRef = (el: HTMLElement) => {
       console.log('pushing ref', el)
       allRefs = allRefs.concat([el])
     }
 
-    gamepadHandler.listenButtonEvent(() => {
-      selectedIndex = (selectedIndex + 1) % 10
-      allRefs[selectedIndex].focus()
+    const findClosestItemInDirection = (
+      direction: ControlsEvent
+    ): HTMLElement => {
+      if (!selected.value) {
+        return allRefs[0]
+      }
+      const boundingBox = selected.value.getBoundingClientRect()
+
+      interface DirectionHandlers {
+        customFilter: (item: DOMRect, base: DOMRect) => boolean
+        mainDistance: (item: DOMRect, base: DOMRect) => number
+        weakDistance: (item: DOMRect, base: DOMRect) => number
+      }
+
+      const directionHandlers: { [key: string]: DirectionHandlers } = {
+        RIGHT: {
+          customFilter: (item: DOMRect, base: DOMRect) =>
+            item.left >= base.right,
+          mainDistance: (item: DOMRect, base: DOMRect) =>
+            Math.abs(item.y - base.y),
+          weakDistance: (item: DOMRect, base: DOMRect) =>
+            item.left - base.right,
+        },
+        LEFT: {
+          customFilter: (item: DOMRect, base: DOMRect) =>
+            item.right <= base.left,
+          mainDistance: (item: DOMRect, base: DOMRect) =>
+            Math.abs(item.y - base.y),
+          weakDistance: (item: DOMRect, base: DOMRect) =>
+            base.left - item.right,
+        },
+      }
+
+      const directionHandler = directionHandlers[direction]
+      if (!directionHandler) {
+        return selected.value
+      }
+      const items = allRefs.filter((item) =>
+        directionHandler.customFilter(item.getBoundingClientRect(), boundingBox)
+      )
+      const nextItem = sortBy(items, (item) => {
+        const rect = item.getBoundingClientRect()
+        const xDistance = directionHandler.weakDistance(rect, boundingBox)
+        const yDistance = directionHandler.mainDistance(rect, boundingBox)
+
+        return 1000 * yDistance + xDistance
+      })[0]
+      return nextItem || selected.value
+    }
+
+    controls.listen((event) => {
+      const nextItem = findClosestItemInDirection(event)
+      selected.value = nextItem
+      nextItem.focus()
     })
 
     return { games, addItemRef, startGame }
@@ -146,3 +199,7 @@ export default defineComponent({
   opacity: 0.5;
 }
 </style>
+
+function ControlsEvent(direction: any, ControlsEvent: any) { throw new
+Error('Function not implemented.') } function ControlsEvent(direction: any,
+ControlsEvent: any) { throw new Error('Function not implemented.') }
