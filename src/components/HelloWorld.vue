@@ -43,7 +43,7 @@ export default defineComponent({
   setup() {
     const games = ref([0, 1, 2, 3, 4, 5, 6, 7, 8])
     function startGame() {
-      const iso = toWindowsPath('E', 'data/games/gc/mprime.gcm')
+      const iso = toWindowsPath('C', 'Users/cib12/games/gc/mprime.gcm')
       const saveState = toWindowsPath(
         'C',
         'Users/cib12/Documents/Dolphin Emulator/StateSaves/GM8E01.s01'
@@ -56,6 +56,7 @@ export default defineComponent({
         `${dolphin} -e ${iso} -s ${saveState} --config "Dolphin.Display.Fullscreen=True" -b`
       )
       console.log('result', result)
+      result.addListener('message', (msg) => console.log('msg', msg))
       result.addListener('error', (error) => console.log('error', error))
       result.addListener('close', () => console.log('child process closed'))
 
@@ -84,6 +85,7 @@ export default defineComponent({
     const findClosestItemInDirection = (
       direction: ControlsEvent
     ): HTMLElement => {
+      console.log('direction', direction)
       if (!selected.value) {
         return allRefs[0]
       }
@@ -98,7 +100,7 @@ export default defineComponent({
       const directionHandlers: { [key: string]: DirectionHandlers } = {
         RIGHT: {
           customFilter: (item: DOMRect, base: DOMRect) =>
-            item.left >= base.right,
+            item.left >= base.left,
           mainDistance: (item: DOMRect, base: DOMRect) =>
             Math.abs(item.y - base.y),
           weakDistance: (item: DOMRect, base: DOMRect) =>
@@ -106,11 +108,26 @@ export default defineComponent({
         },
         LEFT: {
           customFilter: (item: DOMRect, base: DOMRect) =>
-            item.right <= base.left,
+            item.right <= base.right,
           mainDistance: (item: DOMRect, base: DOMRect) =>
             Math.abs(item.y - base.y),
           weakDistance: (item: DOMRect, base: DOMRect) =>
             base.left - item.right,
+        },
+        UP: {
+          customFilter: (item: DOMRect, base: DOMRect) =>
+            item.bottom <= base.bottom,
+          mainDistance: (item: DOMRect, base: DOMRect) =>
+            Math.abs(item.x - base.x),
+          weakDistance: (item: DOMRect, base: DOMRect) =>
+            base.top - item.bottom,
+        },
+        DOWN: {
+          customFilter: (item: DOMRect, base: DOMRect) => item.top >= base.top,
+          mainDistance: (item: DOMRect, base: DOMRect) =>
+            Math.abs(item.x - base.x),
+          weakDistance: (item: DOMRect, base: DOMRect) =>
+            item.top - base.bottom,
         },
       }
 
@@ -118,8 +135,19 @@ export default defineComponent({
       if (!directionHandler) {
         return selected.value
       }
-      const items = allRefs.filter((item) =>
-        directionHandler.customFilter(item.getBoundingClientRect(), boundingBox)
+      const items = allRefs.filter(
+        (item) =>
+          directionHandler.customFilter(
+            item.getBoundingClientRect(),
+            boundingBox
+          ) && item !== selected.value
+      )
+      console.log(
+        'items',
+        items.map((item) => [
+          item.getBoundingClientRect().x,
+          item.getBoundingClientRect().y,
+        ])
       )
       const nextItem = sortBy(items, (item) => {
         const rect = item.getBoundingClientRect()

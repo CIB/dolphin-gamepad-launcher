@@ -71,7 +71,7 @@ export class GamepadHandler {
           const lastButton = this.lastState
             ? this.lastState[index]
             : { pressed: false, touched: false, value: 0 }
-          if (buttonPressed(button, lastButton)) {
+          if (button.pressed !== lastButton.pressed) {
             triggerButtonEvent({
               type: 'button',
               buttonId: index,
