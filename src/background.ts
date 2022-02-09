@@ -21,8 +21,10 @@ async function createWindow() {
       nodeIntegration: process.env
         .ELECTRON_NODE_INTEGRATION as unknown as boolean,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION,
+      devTools: true,
     },
     autoHideMenuBar: true,
+    fullscreen: true,
   })
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {

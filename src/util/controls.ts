@@ -1,6 +1,6 @@
 import { ButtonPressEvent, gamepadHandler } from './gamepad'
 
-export type ControlsEvent =
+export type DirectionEvent =
   | 'UP'
   | 'DOWN'
   | 'LEFT'
@@ -10,21 +10,23 @@ export type ControlsEvent =
   | 'LEFTDOWN'
   | 'RIGHTDOWN'
 
-const buttonMap: { [key: string]: ControlsEvent } = {
+export type ActionEvent = 'A'
+
+const buttonMap: { [key: string]: DirectionEvent } = {
   '12': 'UP',
   '13': 'DOWN',
   '14': 'LEFT',
   '15': 'RIGHT',
 }
 
-const axisMap: { [key: string]: ControlsEvent } = {
+const axisMap: { [key: string]: DirectionEvent } = {
   '0+': 'RIGHT',
   '0-': 'LEFT',
   '1+': 'DOWN',
   '1-': 'UP',
 }
 
-function axisEvent(event: ButtonPressEvent): ControlsEvent | null {
+function axisEvent(event: ButtonPressEvent): DirectionEvent | null {
   const sign = event.value >= 0 ? '+' : '-'
   const key = `${event.buttonId}${sign}`
   return key in axisMap ? axisMap[key] : null
@@ -32,15 +34,15 @@ function axisEvent(event: ButtonPressEvent): ControlsEvent | null {
 
 const buttonHeldIntervals = [320, 120, 100]
 export class Controls {
-  heldDirection: ControlsEvent | null = null
+  heldDirection: DirectionEvent | null = null
   heldAxis: number | null = null
   heldInterval = 0
   activeLoop: NodeJS.Timeout | null = null
 
-  listen(cb: (event: ControlsEvent) => void): void {
+  listenDirection(cb: (event: DirectionEvent) => void): void {
     gamepadHandler.listenButtonEvent((event) => {
-      const key = event.buttonId.toString() as ControlsEvent
-      let controlsEvent: ControlsEvent | null = null
+      const key = event.buttonId.toString() as DirectionEvent
+      let controlsEvent: DirectionEvent | null = null
       const value = Math.sign(Math.round(event.value))
 
       if (event.type === 'button' && key in buttonMap) {
@@ -78,6 +80,18 @@ export class Controls {
           }
           loopCallback()
         }
+      }
+    })
+  }
+
+  listenAction(cb: (event: ActionEvent) => void): void {
+    gamepadHandler.listenButtonEvent((event) => {
+      if (
+        event.type === 'button' &&
+        !(event.buttonId.toString() in buttonMap) &&
+        event.value
+      ) {
+        cb('A')
       }
     })
   }

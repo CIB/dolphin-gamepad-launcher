@@ -23,10 +23,17 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onBeforeUpdate, onMounted, Ref, ref } from 'vue'
+import {
+  defineComponent,
+  onBeforeUpdate,
+  onMounted,
+  Ref,
+  ref,
+  watch,
+} from 'vue'
 import { sortBy } from 'lodash'
-import { controls, ControlsEvent } from '@/util/controls'
-import { exec } from 'child_process'
+import { controls, DirectionEvent } from '@/util/controls'
+import { dolphinLauncher } from '@/util/dolphin-launcher'
 import * as path from 'path'
 
 function toWindowsPath(driveLetter: string, somePath: string): string {
@@ -42,26 +49,17 @@ export default defineComponent({
   },
   setup() {
     const games = ref([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    const inGame = ref(false)
     function startGame() {
-      const iso = toWindowsPath('C', 'Users/cib12/games/gc/mprime.gcm')
-      const saveState = toWindowsPath(
-        'C',
-        'Users/cib12/Documents/Dolphin Emulator/StateSaves/GM8E01.s01'
-      )
-      const dolphin = toWindowsPath(
-        'C',
-        'Users/cib12/games/Dolphin-x64/Dolphin.exe'
-      )
-      const result = exec(
-        `${dolphin} -e ${iso} -s ${saveState} --config "Dolphin.Display.Fullscreen=True" -b`
-      )
-      console.log('result', result)
-      result.addListener('message', (msg) => console.log('msg', msg))
-      result.addListener('error', (error) => console.log('error', error))
-      result.addListener('close', () => console.log('child process closed'))
-
-      selectedIndex = (selectedIndex + 1) % 10
-      allRefs[selectedIndex].focus()
+      if (!inGame.value) {
+        inGame.value = true
+        const iso = '/run/media/cib/A8D22880D228553A/data/games/gc/mprime.gcm'
+        const saveState = '~/.local/share/dolphin-emu/StateSaves/GM8E01.s01'
+        dolphinLauncher.launch(iso, saveState, () => {
+          console.log('closing!')
+          inGame.value = false
+        })
+      }
     }
 
     onMounted(() => {
@@ -76,14 +74,13 @@ export default defineComponent({
 
     let allRefs = [] as HTMLElement[]
     const selected: Ref<HTMLElement | null> = ref(null)
-    let selectedIndex = 0
     const addItemRef = (el: HTMLElement) => {
       console.log('pushing ref', el)
       allRefs = allRefs.concat([el])
     }
 
     const findClosestItemInDirection = (
-      direction: ControlsEvent
+      direction: DirectionEvent
     ): HTMLElement => {
       console.log('direction', direction)
       if (!selected.value) {
@@ -159,10 +156,23 @@ export default defineComponent({
       return nextItem || selected.value
     }
 
-    controls.listen((event) => {
+    controls.listenDirection((event) => {
       const nextItem = findClosestItemInDirection(event)
       selected.value = nextItem
-      nextItem.focus()
+    })
+    controls.listenAction((event) => {
+      if (event === 'A') {
+        startGame()
+      }
+    })
+
+    watch(selected, (newItem, oldItem) => {
+      if (oldItem) {
+        oldItem.classList.remove('is-selected')
+      }
+      if (newItem) {
+        newItem.classList.add('is-selected')
+      }
     })
 
     return { games, addItemRef, startGame }
@@ -219,15 +229,11 @@ export default defineComponent({
   width: 100%;
 }
 
-:focus {
+.is-selected {
   background-color: rgba(255, 94, 0, 0.5);
 }
 
-:focus > img {
+.is-selected > img {
   opacity: 0.5;
 }
 </style>
-
-function ControlsEvent(direction: any, ControlsEvent: any) { throw new
-Error('Function not implemented.') } function ControlsEvent(direction: any,
-ControlsEvent: any) { throw new Error('Function not implemented.') }
