@@ -1,9 +1,9 @@
 import { App } from '@vue/runtime-core'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faPhone } from '@fortawesome/free-solid-svg-icons'
+import { faPhone, faGamepad, faWrench } from '@fortawesome/free-solid-svg-icons'
 
-library.add(faPhone)
+library.add(faPhone, faGamepad, faWrench)
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 

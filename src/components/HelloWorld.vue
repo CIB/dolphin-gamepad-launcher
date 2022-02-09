@@ -2,7 +2,22 @@
   <div class="flex-container-row">
     <div class="sidebar">
       <div class="flex-container-column">
-        <div class="flex-item" :ref="addItemRef" tabindex="0">Spiele</div>
+        <div class="flex-item" :ref="addItemRef">
+          <div class="menu-row">
+            <div class="menu-icon">
+              <font-awesome-icon icon="gamepad" />
+            </div>
+            <div>Games</div>
+          </div>
+        </div>
+        <div class="flex-item" :ref="addItemRef">
+          <div class="menu-row">
+            <div class="menu-icon">
+              <font-awesome-icon icon="wrench" />
+            </div>
+            <div>Settings</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="games-panel">
@@ -13,7 +28,6 @@
           class="game-tile"
           @click="startGame"
           :ref="addItemRef"
-          tabindex="0"
         >
           <img src="@/assets/GM8E01.png" />
         </div>
@@ -181,20 +195,24 @@ export default defineComponent({
 </script>
 
 <style scoped lang="scss">
+@import '@/scss/app.scss';
+
 .flex-container-row {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  height: 100%;
+  height: 800px;
 }
 
 .games-panel {
   width: 100%;
   flex-grow: 1;
+  padding-left: 32px;
 }
 .flex-container-grid {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
+  align-content: flex-start;
   flex-direction: row;
   width: 100%;
   height: 100%;
@@ -207,26 +225,41 @@ export default defineComponent({
 .game-tile {
   width: 160px;
   height: 224px;
-  border-style: dotted;
-  border-width: 3px;
+  border-style: solid;
+  border-width: 1px;
   background-color: #333;
 }
 
 .sidebar {
   justify-self: flex-start;
   flex-grow: 0;
+  background-color: $color-bg-light;
+  padding-top: 16px;
 }
 
 .flex-container-column {
   display: flex;
   flex-direction: column;
-  width: 100px;
-  border-style: solid;
-  border-width: 2px;
+  width: 200px;
   height: 100%;
 }
 .flex-item {
   width: 100%;
+}
+.menu-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  padding-left: 16px;
+  gap: 12px;
+  font-size: 20px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.menu-icon {
+  font-size: 28px;
+  width: 32px;
 }
 
 .is-selected {

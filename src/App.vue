@@ -1,10 +1,5 @@
 <template>
-  <div id="nav">
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </div>
   <router-view />
-  <font-awesome-icon icon="phone" />
 </template>
 
 <style lang="scss">
